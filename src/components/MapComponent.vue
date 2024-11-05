@@ -6,9 +6,10 @@
     style="width: 100%; height: 85vh; border-radius: 12px;"
   >
     <GMapMarker :position="currentPosition" />
+    
     <GMapPolyline 
       :path="path" 
-      :strokeColor="'#0000FF'" 
+      strokeColor="#d43352"
       :strokeOpacity="1" 
       :strokeWeight="5" 
     />
@@ -42,15 +43,12 @@ export default {
   },
   methods: {
     addPositionToPath(position) {
-      if (!position || !position.lat || !position.lon) {
+      if (!position || typeof position.lat !== 'number' || typeof position.lng !== 'number') {
         console.warn('Geçersiz konum:', position);
         return;
       }
 
-      this.path.push({
-        lat: parseFloat(position.lat),
-        lng: parseFloat(position.lon) 
-      });
+      this.path = [...this.path, { lat: position.lat, lng: position.lng }];
       console.log('Path:', this.path); 
     },
   },
