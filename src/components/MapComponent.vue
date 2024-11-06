@@ -18,7 +18,6 @@
         :icon="redIcon"
       />
     </GMapMap>
-
     <div class="legend">
       <div class="legend-item">
         <span class="legend-icon" style="background-color: #0000FF;"></span> Geçmiş Konum
