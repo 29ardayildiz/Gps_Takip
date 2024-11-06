@@ -1,26 +1,33 @@
-
 <template>
-  <GMapMap
-    ref="map"
-    :center="currentPosition"
-    :zoom="15"
-    style="width: 100%; height: 85vh; border-radius: 12px;"
-  >
-    <!-- Geçmiş konumları gri markerlarla göster -->
-    <GMapMarker 
-      v-for="(position, index) in path.slice(0, -1)" 
-      :key="index"
-      :position="position"
-      :icon="greyIcon"
-      
-    />
+  <div style="position: relative;">
+    <GMapMap
+      ref="map"
+      :center="currentPosition"
+      :zoom="15"
+      style="width: 100%; height: 85vh; border-radius: 12px;"
+    >
+      <GMapMarker 
+        v-for="(position, index) in path.slice(0, -1)" 
+        :key="index"
+        :position="position"
+        :icon="greyIcon"
+      />
 
-    <!-- Son konumu kırmızı marker ile göster -->
-    <GMapMarker 
-      :position="currentPosition" 
-      :icon="redIcon"
-    />
-  </GMapMap>
+      <GMapMarker 
+        :position="currentPosition" 
+        :icon="redIcon"
+      />
+    </GMapMap>
+
+    <div class="legend">
+      <div class="legend-item">
+        <span class="legend-icon" style="background-color: #0000FF;"></span> Geçmiş Konum
+      </div>
+      <div class="legend-item">
+        <span class="legend-icon-arrow" :style="{ backgroundImage: 'url(' + require('@/assets/marker.png') + ')' }"></span> Son Konum
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -40,9 +47,9 @@ export default {
   },
   data() {
     return {
-      path: [], // Tüm geçmiş konumları tutmak için dizi
-      greyIcon: null, // Gri icon referansı
-      redIcon: null, // Kırmızı icon referansı
+      path: [], 
+      greyIcon: null, 
+      redIcon: null, 
     };
   },
   watch: { 
@@ -51,7 +58,6 @@ export default {
     },
   },
   mounted() {
-    // google.maps yüklendikten sonra ikonları ayarla
     if (window.google && window.google.maps) {
       this.greyIcon = {
         path: google.maps.SymbolPath.CIRCLE,
@@ -62,25 +68,20 @@ export default {
       };
       
       this.redIcon = {
-        path: google.maps.SymbolPath.GMapMarker,
-        fillColor: '#FF0000',
-        fillOpacity: 1,
-        strokeWeight: 0,
-        scale: 7
+        url: require('@/assets/marker.png'), 
+        scaledSize: new google.maps.Size(30, 30), 
       };
     }
   },
   methods: {
     addPositionToPath(position) {
-      // Geçersiz konumları filtreleme
       if (!position || typeof position.lat !== 'number' || typeof position.lng !== 'number') {
         console.warn('Geçersiz konum:', position);
         return;
       }
 
-      // Yeni konumu path listesine ekle
       this.path.push({ lat: position.lat, lng: position.lng });
-      this.path = [...this.path]; // Reaktif sistem için path'i güncelle
+      this.path = [...this.path]; 
       console.log('Path:', this.path); 
     },
   },
@@ -95,5 +96,39 @@ GMapMap {
 
 GMapMap:hover {
   transform: scale(1.02);
+}
+
+.legend {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: white;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 5px;
+}
+
+.legend-icon {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  margin-right: 11px; 
+}
+
+.legend-icon-arrow {
+  width: 20px;
+  height: 20px;
+  background-size: cover;
+  margin-right: 8px; 
 }
 </style>
