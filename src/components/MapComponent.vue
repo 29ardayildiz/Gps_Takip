@@ -1,3 +1,4 @@
+
 <template>
   <GMapMap
     ref="map"
@@ -5,25 +6,31 @@
     :zoom="15"
     style="width: 100%; height: 85vh; border-radius: 12px;"
   >
-    <GMapMarker :position="currentPosition" />
-    
-    <GMapPolyline 
-      :path="path" 
-      strokeColor="#d43352"
-      :strokeOpacity="1" 
-      :strokeWeight="5" 
+    <!-- Geçmiş konumları gri markerlarla göster -->
+    <GMapMarker 
+      v-for="(position, index) in path.slice(0, -1)" 
+      :key="index"
+      :position="position"
+      :icon="greyIcon"
+      
+    />
+
+    <!-- Son konumu kırmızı marker ile göster -->
+    <GMapMarker 
+      :position="currentPosition" 
+      :icon="redIcon"
     />
   </GMapMap>
 </template>
 
 <script>
-import { GMapMap, GMapMarker, GMapPolyline } from "@fawmi/vue-google-maps";
+/* global google */
+import { GMapMap, GMapMarker } from "@fawmi/vue-google-maps";
 
 export default {
   components: {
     GMapMap,
     GMapMarker,
-    GMapPolyline,
   },
   props: {
     currentPosition: {
@@ -33,7 +40,9 @@ export default {
   },
   data() {
     return {
-      path: [], 
+      path: [], // Tüm geçmiş konumları tutmak için dizi
+      greyIcon: null, // Gri icon referansı
+      redIcon: null, // Kırmızı icon referansı
     };
   },
   watch: { 
@@ -41,14 +50,37 @@ export default {
       this.addPositionToPath(newPosition);
     },
   },
+  mounted() {
+    // google.maps yüklendikten sonra ikonları ayarla
+    if (window.google && window.google.maps) {
+      this.greyIcon = {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: '#0000FF',
+        fillOpacity: 1,
+        strokeWeight: 0,
+        scale: 7
+      };
+      
+      this.redIcon = {
+        path: google.maps.SymbolPath.GMapMarker,
+        fillColor: '#FF0000',
+        fillOpacity: 1,
+        strokeWeight: 0,
+        scale: 7
+      };
+    }
+  },
   methods: {
     addPositionToPath(position) {
+      // Geçersiz konumları filtreleme
       if (!position || typeof position.lat !== 'number' || typeof position.lng !== 'number') {
         console.warn('Geçersiz konum:', position);
         return;
       }
 
-      this.path = [...this.path, { lat: position.lat, lng: position.lng }];
+      // Yeni konumu path listesine ekle
+      this.path.push({ lat: position.lat, lng: position.lng });
+      this.path = [...this.path]; // Reaktif sistem için path'i güncelle
       console.log('Path:', this.path); 
     },
   },
