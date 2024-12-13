@@ -24,7 +24,7 @@ npm run lint
 See [Configuration Reference](https://cli.vuejs.org/config/).
 
 ```
-npm install @fawmi/vue-google-maps
+npm install leaflet
 ```
 ```
 npm install axios
