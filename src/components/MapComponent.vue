@@ -1,43 +1,22 @@
 <template>
-  <div style="position: relative;">
-    <GMapMap
-      ref="map"
-      :center="currentPosition"
-      :zoom="15"
-      style="width: 100%; height: 85vh; border-radius: 12px;"
-    >
-      <GMapMarker 
-        v-for="(position, index) in path.slice(0, -1)" 
-        :key="index"
-        :position="position"
-        :icon="greyIcon"
-      />
-
-      <GMapMarker 
-        :position="currentPosition" 
-        :icon="redIcon"
-      />
-    </GMapMap>
+  <div style="position: relative; width: 100%; height: 85vh;">
+    <div id="map" style="width: 100%; height: 100%; border-radius: 12px;"></div>
     <div class="legend">
       <div class="legend-item">
-        <span class="legend-icon" style="background-color: #0000FF;"></span> Geçmiş Konum
+        <span class="legend-icon marker-icon"></span> Son Konum
       </div>
       <div class="legend-item">
-        <span class="legend-icon-arrow" :style="{ backgroundImage: 'url(' + require('@/assets/marker.png') + ')' }"></span> Son Konum
+        <span class="legend-icon point-icon"></span> Geçmiş Konum
       </div>
     </div>
   </div>
 </template>
 
 <script>
-/* global google */
-import { GMapMap, GMapMarker } from "@fawmi/vue-google-maps";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 export default {
-  components: {
-    GMapMap,
-    GMapMarker,
-  },
   props: {
     currentPosition: {
       type: Object,
@@ -46,60 +25,76 @@ export default {
   },
   data() {
     return {
-      path: [], 
-      greyIcon: null, 
-      redIcon: null, 
+      map: null,
+      path: [], // Konum geçmişi
+      currentMarker: null,
     };
   },
-  watch: { 
+  watch: {
     currentPosition(newPosition) {
-      this.addPositionToPath(newPosition);
+      this.updateMap(newPosition);
     },
   },
   mounted() {
-    if (window.google && window.google.maps) {
-      this.greyIcon = {
-        path: google.maps.SymbolPath.CIRCLE,
-        fillColor: '#0000FF',
-        fillOpacity: 1,
-        strokeWeight: 0,
-        scale: 7
-      };
-      
-      this.redIcon = {
-        url: require('@/assets/marker.png'), 
-        scaledSize: new google.maps.Size(30, 30), 
-      };
-    }
+    this.initializeMap();
   },
   methods: {
-    addPositionToPath(position) {
-      if (!position || typeof position.lat !== 'number' || typeof position.lng !== 'number') {
-        console.warn('Geçersiz konum:', position);
+    initializeMap() {
+      this.map = L.map("map").setView([0, 0], 15);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(this.map);
+    },
+    updateMap(position) {
+      if (!position || typeof position.lat !== "number" || typeof position.lng !== "number") {
+        console.warn("Geçersiz konum:", position);
         return;
       }
 
-      this.path.push({ lat: position.lat, lng: position.lng });
-      this.path = [...this.path]; 
-      console.log('Path:', this.path); 
+      if (this.path.length > 0) {
+        const lastPosition = this.path[this.path.length - 1];
+        L.circleMarker(lastPosition, {
+          radius: 3,
+          color: "#0000FF",
+          fillColor: "#0000FF",
+          fillOpacity: 1,
+        }).addTo(this.map);
+      }
+
+      if (this.currentMarker) {
+        this.map.removeLayer(this.currentMarker);
+      }
+
+      this.currentMarker = L.marker([position.lat, position.lng], {
+        icon: L.icon({
+          iconUrl: require('@/assets/marker.png'),
+          iconSize: [30, 30],
+        }),
+      }).addTo(this.map);
+
+      this.path.push([position.lat, position.lng]);
+      this.map.panTo([position.lat, position.lng]);
     },
   },
 };
 </script>
 
 <style scoped>
-GMapMap {
+
+#map {
   border-radius: 12px;
   transition: transform 0.5s ease;
 }
 
-GMapMap:hover {
+#map:hover {
   transform: scale(1.02);
 }
 
+
 .legend {
   position: absolute;
-  bottom: 10px;
+  bottom: 10px; 
   left: 10px;
   background: white;
   padding: 10px;
@@ -108,12 +103,12 @@ GMapMap:hover {
   font-size: 14px;
   display: flex;
   flex-direction: column;
+  z-index: 1000;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   margin-bottom: 5px;
 }
 
@@ -121,13 +116,22 @@ GMapMap:hover {
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  margin-right: 11px; 
+  margin-right: 10px;
 }
 
-.legend-icon-arrow {
+.marker-icon {
+  background-image: url('@/assets/marker.png');
+  background-size: cover;
   width: 20px;
   height: 20px;
-  background-size: cover;
-  margin-right: 8px; 
+  border-radius: 0;
+}
+
+.point-icon {
+  background-color: #0000FF;
+  border: 2px solid #0000FF;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
 }
 </style>
