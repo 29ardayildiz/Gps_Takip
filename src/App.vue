@@ -20,7 +20,7 @@ export default {
       locations: [],
       currentPositionIndex: 0,
       currentPosition: { lat: 0, lng: 0 },
-      token: '1|GAW83wB9tsbZannymzjwzFRcy9Fi8wNi69KciNgWSViRVH6ZL8',
+      token: '**********************************',
       selectedIMEI: '860147052825369', // Varsayılan IMEI numarası
     };
   },
